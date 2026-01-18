@@ -1,6 +1,8 @@
 """Definitions of auto-detectable Mercury Switch models."""
 
-from typing import ClassVar
+from __future__ import annotations
+
+from typing import Any, ClassVar
 
 from .utils import get_all_child_classes_list
 
@@ -19,38 +21,38 @@ class AutodetectedMercuryModel:
     SUPPORTED = True
     MODEL_NAME = ""
     PORTS = 0
-    CHECKS_AND_RESULTS: ClassVar = []
+    CHECKS_AND_RESULTS: ClassVar[list[tuple[str, list[str]]]] = []
 
-    AUTODETECT_TEMPLATES: ClassVar = [
+    AUTODETECT_TEMPLATES: ClassVar[list[dict[str, Any]]] = [
         {"method": "get", "url": "http://{host}/SystemInfoRpm.htm"},
     ]
 
-    LOGIN_TEMPLATE: ClassVar = {
+    LOGIN_TEMPLATE: ClassVar[dict[str, Any]] = {
         "method": "post",
         "url": "http://{host}/logon.cgi",
         "params": {"username": "_username", "password": "_password", "logon": "登录"},
     }
 
-    SYSTEM_INFO_TEMPLATES: ClassVar = [
+    SYSTEM_INFO_TEMPLATES: ClassVar[list[dict[str, Any]]] = [
         {"method": "get", "url": "http://{host}/SystemInfoRpm.htm"},
     ]
 
-    PORT_SETTING_TEMPLATES: ClassVar = [
+    PORT_SETTING_TEMPLATES: ClassVar[list[dict[str, Any]]] = [
         {"method": "get", "url": "http://{host}/PortSettingRpm.htm"},
     ]
 
-    PORT_STATISTICS_TEMPLATES: ClassVar = [
+    PORT_STATISTICS_TEMPLATES: ClassVar[list[dict[str, Any]]] = [
         {"method": "get", "url": "http://{host}/PortStatisticsRpm.htm"},
     ]
 
-    VLAN_8021Q_TEMPLATES: ClassVar = [
+    VLAN_8021Q_TEMPLATES: ClassVar[list[dict[str, Any]]] = [
         {"method": "get", "url": "http://{host}/Vlan8021QRpm.htm"},
     ]
 
     def __init__(self) -> None:
         """Empty constructor."""
 
-    def get_autodetect_funcs(self) -> list:
+    def get_autodetect_funcs(self) -> list[tuple[str, list[str]]]:
         """Return list with detection functions."""
         return self.CHECKS_AND_RESULTS
 
@@ -61,7 +63,7 @@ class SG108Pro(AutodetectedMercuryModel):
     MODEL_NAME = "SG108Pro"
     PORTS = 8
 
-    CHECKS_AND_RESULTS: ClassVar = [
+    CHECKS_AND_RESULTS: ClassVar[list[tuple[str, list[str]]]] = [
         ("check_system_info_model", ["SG108-Pro"]),
     ]
 
@@ -73,10 +75,10 @@ class SG105E(AutodetectedMercuryModel):
     PORTS = 5
     SUPPORTED = False  # Not yet implemented
 
-    CHECKS_AND_RESULTS: ClassVar = [
+    CHECKS_AND_RESULTS: ClassVar[list[tuple[str, list[str]]]] = [
         ("check_system_info_model", ["SG105E"]),
     ]
 
 
 # Get all registered models
-MODELS = get_all_child_classes_list(AutodetectedMercuryModel)
+MODELS: list[type] = get_all_child_classes_list(AutodetectedMercuryModel)

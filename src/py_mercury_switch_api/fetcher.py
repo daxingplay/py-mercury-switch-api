@@ -1,5 +1,7 @@
 """HTML page retrieval classes."""
 
+from __future__ import annotations
+
 import logging
 from pathlib import Path
 from typing import Any
@@ -27,14 +29,16 @@ class BaseResponse:
 
     def __init__(self) -> None:
         """Initialize BaseResponse Object."""
-        self.status_code = status_code_not_found
-        self.content = b""
-        self.text = ""
-        self.cookies = requests.cookies.RequestsCookieJar()
+        self.status_code: int = status_code_not_found
+        self.content: bytes = b""
+        self.text: str = ""
+        self.cookies: requests.cookies.RequestsCookieJar = (
+            requests.cookies.RequestsCookieJar()
+        )
 
     def __bool__(self) -> bool:
         """Return True if status code is 200."""
-        return self.status_code == status_code_ok
+        return bool(self.status_code == status_code_ok)
 
 
 class PageFetcher:
@@ -44,8 +48,8 @@ class PageFetcher:
         """Initialize PageFetcher Object."""
         self.host = host
         # login cookie
-        self._cookie_name = None
-        self._cookie_content = None
+        self._cookie_name: str | None = None
+        self._cookie_content: str | None = None
 
         # offline mode settings
         self.offline_mode = False
@@ -78,13 +82,13 @@ class PageFetcher:
 
     def has_ok_status(self, response: Response | BaseResponse) -> bool:
         """Check if response has OK status."""
-        return response.status_code == status_code_ok
+        return bool(response.status_code == status_code_ok)
 
     def request(
         self, method: str, url: str, data: dict[str, Any] | None = None
     ) -> Response:
         """Make HTTP request."""
-        cookies = {}
+        cookies: dict[str, str] = {}
         if self._cookie_name and self._cookie_content:
             cookies[self._cookie_name] = self._cookie_content
 

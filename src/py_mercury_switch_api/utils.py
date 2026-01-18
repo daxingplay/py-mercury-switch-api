@@ -1,9 +1,11 @@
 """Utility functions."""
 
+from __future__ import annotations
+
 
 def get_all_child_classes_dict(
-    parent_class: type[object], filter_attr: str | None = None
-) -> dict[str, type[object]]:
+    parent_class: type, filter_attr: str | None = None
+) -> dict[str, type]:
     """
     Retrieve a dictionary of all subclasses of the given parent class.
 
@@ -19,7 +21,7 @@ def get_all_child_classes_dict(
     :return: A dictionary {subclass.filter_attr: subclass_object} if
         filter_attr is provided, otherwise {subclass.__name__: subclass_object}.
     """
-    subclasses_dict: dict[str, type[object]] = {}
+    subclasses_dict: dict[str, type] = {}
 
     for subclass in parent_class.__subclasses__():
         # Recursively get child subclasses first
@@ -38,8 +40,8 @@ def get_all_child_classes_dict(
 
 
 def get_all_child_classes_list(
-    parent_class: type[object], filter_attr: str | None = None
-) -> list[type[object]]:
+    parent_class: type, filter_attr: str | None = None
+) -> list[type]:
     """
     Retrieve a list of all subclasses of the given parent class.
 
@@ -51,7 +53,7 @@ def get_all_child_classes_list(
         meaning include all).
     :return: A list of subclass objects.
     """
-    subclasses_list: list[type[object]] = []
+    subclasses_list: list[type] = []
 
     for subclass in parent_class.__subclasses__():
         # Recursively get child subclasses first

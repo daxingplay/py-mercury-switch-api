@@ -1,5 +1,7 @@
 """Definitions of HTML parsers for Mercury switches."""
 
+from __future__ import annotations
+
 import logging
 import re
 from typing import Any
@@ -14,7 +16,7 @@ class MercurySwitchPageParserError(Exception):
     """Error parsing page."""
 
 
-def create_page_parser(switch_model: str | None = None) -> "PageParser":
+def create_page_parser(switch_model: str | None = None) -> PageParser:
     """Return the parser for the switch model."""
     # For now, we only have one parser. In the future, we can add model-specific parsers.
     return PageParser()
@@ -39,7 +41,7 @@ class PageParser:
             )
 
         js_obj_str = match.group(1)
-        result = {}
+        result: dict[str, Any] = {}
 
         # Parse key-value pairs
         # Match patterns like: key: value or key: [value1, value2]
@@ -52,7 +54,7 @@ class PageParser:
             if value_str.startswith("[") and value_str.endswith("]"):
                 # Parse array
                 array_content = value_str[1:-1]
-                values = []
+                values: list[str | int] = []
                 # Handle array elements (strings, numbers, hex)
                 for elem in re.finditer(
                     r"(['\"][^'\"]*['\"]|\d+|0x[0-9A-Fa-f]+)", array_content
@@ -111,14 +113,15 @@ class PageParser:
         try:
             info_ds = self.parse_js_object(response.text, "info_ds")
             if "descriStr" in info_ds and len(info_ds["descriStr"]) > 0:
-                return info_ds["descriStr"][0]
+                model_name: str = info_ds["descriStr"][0]
+                return model_name
         except Exception as e:
             _LOGGER.debug("Error parsing system info model: %s", e)
         return ""
 
     def parse_system_info(self, response: BaseResponse) -> dict[str, Any]:
         """Parse system information from SystemInfoRpm.htm."""
-        result = {}
+        result: dict[str, Any] = {}
         try:
             info_ds = self.parse_js_object(response.text, "info_ds")
             if "descriStr" in info_ds and len(info_ds["descriStr"]) > 0:
@@ -137,7 +140,7 @@ class PageParser:
 
     def parse_port_setting(self, response: BaseResponse, ports: int) -> dict[str, Any]:
         """Parse port settings from PortSettingRpm.htm."""
-        result = {}
+        result: dict[str, Any] = {}
         try:
             max_port_num = self.parse_js_variable(response.text, "max_port_num")
             result["switch_ports"] = max_port_num
@@ -166,7 +169,7 @@ class PageParser:
         self, response: BaseResponse, ports: int
     ) -> dict[str, Any]:
         """Parse port statistics from PortStatisticsRpm.htm."""
-        result = {}
+        result: dict[str, Any] = {}
         try:
             max_port_num = self.parse_js_variable(response.text, "max_port_num")
             result["switch_ports"] = max_port_num
@@ -179,7 +182,8 @@ class PageParser:
 
                 for port_num in range(1, min(ports + 1, len(state) + 1)):
                     port_idx = port_num - 1
-                    # Use link_status to determine connectivity (0 = disconnected, >0 = connected)
+                    # Use link_status to determine connectivity
+                    # (0 = disconnected, >0 = connected)
                     if port_idx < len(link_status):
                         link_val = link_status[port_idx]
                         result[f"port_{port_num}_status"] = (
@@ -200,7 +204,7 @@ class PageParser:
 
     def parse_vlan_info(self, response: BaseResponse) -> dict[str, Any]:
         """Parse VLAN information from Vlan8021QRpm.htm."""
-        result = {}
+        result: dict[str, Any] = {}
         try:
             qvlan_ds = self.parse_js_object(response.text, "qvlan_ds")
 
@@ -270,7 +274,10 @@ class PageParser:
         """
         try:
             # Pattern to match: var logonInfo = new Array(1, 0, 0);
-            pattern = r"var\s+logonInfo\s*=\s*new\s+Array\s*\(\s*(\d+)\s*,\s*\d+\s*,\s*\d+\s*\)"
+            pattern = (
+                r"var\s+logonInfo\s*=\s*new\s+Array\s*\("
+                r"\s*(\d+)\s*,\s*\d+\s*,\s*\d+\s*\)"
+            )
             match = re.search(pattern, response.text)
             if match:
                 err_type = int(match.group(1))
@@ -281,7 +288,7 @@ class PageParser:
 
     def _bitmask_to_ports(self, bitmask: int, max_ports: int) -> list[int]:
         """Convert a bitmask to a list of port numbers (1-indexed)."""
-        ports = []
+        ports: list[int] = []
         for i in range(max_ports):
             if bitmask & (1 << i):
                 ports.append(i + 1)  # Ports are 1-indexed

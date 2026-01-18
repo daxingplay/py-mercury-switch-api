@@ -1,5 +1,7 @@
 """Mercury Switch Connector."""
 
+from __future__ import annotations
+
 import logging
 from typing import Any
 
@@ -66,9 +68,9 @@ class MercurySwitchConnector:
         )
 
         for template in AutodetectedMercuryModel.AUTODETECT_TEMPLATES:
-            response = None
-            url = template["url"].format(host=self.host)
-            method = template["method"]
+            response: BaseResponse | Any | None = None
+            url: str = template["url"].format(host=self.host)
+            method: str = template["method"]
 
             if self._page_fetcher.offline_mode:
                 response = self._page_fetcher.get_page_from_file(url)
@@ -91,11 +93,11 @@ class MercurySwitchConnector:
                     # Already BaseResponse
                     pass
 
-                passed_checks_by_model = {}
-                matched_models = []
+                passed_checks_by_model: dict[str, dict[str, bool]] = {}
+                matched_models: list[AutodetectedMercuryModel] = []
 
                 for mdl_cls in MODELS:
-                    mdl = mdl_cls()
+                    mdl: AutodetectedMercuryModel = mdl_cls()
                     mdl_name = mdl.MODEL_NAME
                     passed_checks_by_model[mdl_name] = {}
                     autodetect_funcs = mdl.get_autodetect_funcs()
@@ -120,7 +122,7 @@ class MercurySwitchConnector:
 
                 if len(matched_models) == 1:
                     # set local settings
-                    self._set_instance_attributes_by_model(matched_models[0])
+                    self._set_instance_attributes_by_model(type(matched_models[0]))
                     _LOGGER.info(
                         "[MercurySwitchConnector.autodetect_model] found %s switch.",
                         matched_models[0].MODEL_NAME,
@@ -174,12 +176,13 @@ class MercurySwitchConnector:
                 pass
 
         template = AutodetectedMercuryModel.LOGIN_TEMPLATE
-        url = template["url"].format(host=self.host)
-        method = template["method"]
+        url: str = template["url"].format(host=self.host)
+        method: str = template["method"]
 
         # Prepare form data
-        data = {}
-        for key, value in template["params"].items():
+        data: dict[str, str] = {}
+        params: dict[str, str] = template["params"]
+        for key, value in params.items():
             if value == "_username":
                 data[key] = self.username
             elif value == "_password":
@@ -192,7 +195,7 @@ class MercurySwitchConnector:
             self._page_fetcher.set_cookie("session", "offline_session")
             return True
 
-        response = None
+        response: Any | None = None
         try:
             response = self._page_fetcher.request(method, url, data)
         except NotLoggedInError:
@@ -202,7 +205,7 @@ class MercurySwitchConnector:
             _LOGGER.debug("Error during login request: %s", e)
 
         # Convert Response to BaseResponse for parsing
-        base_response = None
+        base_response: BaseResponse | None = None
         if response:
             base_response = BaseResponse()
             base_response.status_code = response.status_code
@@ -213,7 +216,7 @@ class MercurySwitchConnector:
         # Parse logonInfo from response to determine if login succeeded
         # logonInfo[0] == 0 means success, != 0 means failure
         login_succeeded = False
-        err_type = None
+        err_type: int | None = None
         if base_response:
             err_type = self._page_parser.parse_logon_info(base_response)
             if err_type is not None:
@@ -338,15 +341,18 @@ class MercurySwitchConnector:
         base_response.status_code = status_code_not_found
         return base_response
 
-    def fetch_page_from_templates(self, templates: list) -> BaseResponse:
+    def fetch_page_from_templates(
+        self, templates: list[dict[str, Any]]
+    ) -> BaseResponse:
         """Return response for 1st successful request from templates."""
         for template in templates:
-            url = template["url"].format(host=self.host)
-            method = template["method"]
-            data = None
+            url: str = template["url"].format(host=self.host)
+            method: str = template["method"]
+            data: dict[str, str] | None = None
             if "params" in template:
                 data = {}
-                for key, value in template["params"].items():
+                params: dict[str, str] = template["params"]
+                for key, value in params.items():
                     if value == "_username":
                         data[key] = self.username
                     elif value == "_password":
@@ -366,7 +372,7 @@ class MercurySwitchConnector:
         if not self.switch_model.MODEL_NAME:
             self.autodetect_model()
 
-        switch_data = {}
+        switch_data: dict[str, Any] = {}
 
         # Fetch System Info
         response = self.fetch_page_from_templates(
